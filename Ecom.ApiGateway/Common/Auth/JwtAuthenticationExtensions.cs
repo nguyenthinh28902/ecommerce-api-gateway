@@ -1,0 +1,57 @@
+﻿using Ecom.ApiGateway.Models.Settings;
+using Ecom.ApiGateway.Service.Interfaces;
+using Ecom.ApiGateway.Service.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+
+namespace Ecom.ApiGateway.Common.Auth
+{
+    public static class JwtAuthenticationExtensions
+    {
+        public static IServiceCollection AddGatewayAuthentication(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            // 1. Lấy cấu hình Jwt từ appsettings.reverseproxy.identity.json
+            var internalAuth = configuration.GetSection(nameof(InternalAuth)).Get<InternalAuth>()
+                ?? throw new InvalidOperationException("JwtSettings missing in configuration");
+            services.AddScoped<ITokenClientService, TokenClientService>();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    // IdentityServer URL
+                    options.Authority = internalAuth.Issuer;
+                    options.RequireHttpsMetadata = false; // Dev mode
+
+                    // BẮT BUỘC: Lưu token để dùng trong AddTransforms (Token Relay)
+                    options.SaveToken = true;
+
+                    options.TokenValidationParameters = new TokenValidationParameters {
+                        ValidateIssuer = true,
+                        ValidIssuer = internalAuth.Issuer,
+                        ValidateAudience = false, // gateway không kiểm tra audience
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromSeconds(20),// Khớp thời gian chính xác giữa Gateway và IdentityServer
+                    };
+                });
+
+            // 2. Cấu hình Policy sử dụng cho Routes trong proxy-config.yaml
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("UserReadPolicy", policy =>
+                    policy.RequireClaim("scope", "user.read", "user.internal"));
+                options.AddPolicy("UserWritePolicy", policy =>
+                    policy.RequireClaim("scope", "user.write", "user.internal"));
+                options.AddPolicy("InternalPolicy", policy =>
+                    policy.RequireClaim("scope", "user.internal"));
+                options.AddPolicy("ProductPolicy", policy =>
+                    policy.RequireClaim("scope", "product.read", "product.write", "product.internal"));
+            });
+
+            return services;
+        }
+    }
+}

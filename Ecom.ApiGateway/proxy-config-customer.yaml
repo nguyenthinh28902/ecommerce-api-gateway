@@ -1,0 +1,14 @@
+﻿ReverseProxy:
+  Routes:
+    # Định nghĩa Route cho API Khách hàng
+    customer-route:
+      ClusterId: customer-cluster
+      AuthorizationPolicy: CustomerService # Policy sẽ được định nghĩa trong code
+      Match:
+        Path: "/api/khach-hang/{**catch-all}"
+  Clusters:
+    # Định nghĩa Service Khách hàng bên dưới (Downstream)
+    customer-cluster:
+      Destinations:
+        destination1:
+          Address: "https://localhost:7266" # Link service khách hàng của bạn

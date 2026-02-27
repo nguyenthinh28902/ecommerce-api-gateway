@@ -1,0 +1,6 @@
+@Ecom.ApiGateway_HostAddress = http://localhost:5152
+
+GET {{Ecom.ApiGateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
