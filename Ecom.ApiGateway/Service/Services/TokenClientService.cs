@@ -11,7 +11,7 @@ namespace Ecom.ApiGateway.Service.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IDistributedCache _cache;
         private readonly InternalAuth _options;
-        private const string CacheKey = "gateway_internal_token";
+        private const string CacheKey = "gatewayWeb_internal_token";
 
         public TokenClientService(
             IHttpClientFactory httpClientFactory,

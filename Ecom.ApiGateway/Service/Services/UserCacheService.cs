@@ -10,7 +10,7 @@ namespace Ecom.ApiGateway.Service.Services
     {
         private readonly IDistributedCache _cache;
         // Đây là "vùng tên" riêng cho Identity để không lẫn với UserSession của Gateway
-        private const string IDENTITY_INTERNAL_PREFIX = "InternalAuth:";
+        private const string IDENTITY_INTERNAL_PREFIX = "WebInternalAuth:";
 
         public UserCacheService(IDistributedCache cache)
         {

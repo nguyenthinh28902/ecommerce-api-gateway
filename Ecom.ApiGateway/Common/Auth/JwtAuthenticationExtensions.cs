@@ -41,14 +41,8 @@ namespace Ecom.ApiGateway.Common.Auth
             // 2. Cấu hình Policy sử dụng cho Routes trong proxy-config.yaml
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("UserReadPolicy", policy =>
-                    policy.RequireClaim("scope", "user.read", "user.internal"));
-                options.AddPolicy("UserWritePolicy", policy =>
-                    policy.RequireClaim("scope", "user.write", "user.internal"));
-                options.AddPolicy("InternalPolicy", policy =>
-                    policy.RequireClaim("scope", "user.internal"));
-                options.AddPolicy("ProductPolicy", policy =>
-                    policy.RequireClaim("scope", "product.read", "product.write", "product.internal"));
+                options.AddPolicy("CustomerService", policy =>
+                    policy.RequireClaim("scope", "customer.read", "customer.write", "customer.internal"));
             });
 
             return services;
