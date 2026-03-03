@@ -11,23 +11,33 @@ namespace Ecom.ApiGateway.Service.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IDistributedCache _cache;
         private readonly InternalAuth _options;
+        private readonly ILogger<TokenClientService> _logger;
         private const string CacheKey = "gatewayWeb_internal_token";
 
         public TokenClientService(
             IHttpClientFactory httpClientFactory,
             IDistributedCache cache,
-            IOptions<InternalAuth> options)
+            IOptions<InternalAuth> options,
+            ILogger<TokenClientService> logger)
         {
             _httpClientFactory = httpClientFactory;
             _cache = cache;
             _options = options.Value;
+            _logger = logger;
         }
 
         public async Task<string> GetSystemTokenAsync()
         {
             // 1. Kiểm tra Token trong Redis
-            var cachedToken = await _cache.GetStringAsync(CacheKey);
-            if (!string.IsNullOrEmpty(cachedToken)) return cachedToken;
+            try
+            {
+                var cachedToken = await _cache.GetStringAsync(CacheKey);
+                if (!string.IsNullOrEmpty(cachedToken)) return cachedToken;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi truy xuất token từ cache");
+            }
 
             // 2. Chuẩn bị request xin token mới
             var client = _httpClientFactory.CreateClient();
@@ -60,8 +70,16 @@ namespace Ecom.ApiGateway.Service.Services
                     var cacheOptions = new DistributedCacheEntryOptions {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(tokenResult.ExpiresIn - 30)
                     };
-                    
-                    await _cache.SetStringAsync(CacheKey, tokenResult.AccessToken, cacheOptions);
+
+                    try
+                    {
+                        await _cache.SetStringAsync(CacheKey, tokenResult.AccessToken, cacheOptions);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        _logger.LogError(ex, "Lỗi khi set token vào cache");
+                    }
                     return tokenResult.AccessToken;
                 }
             }

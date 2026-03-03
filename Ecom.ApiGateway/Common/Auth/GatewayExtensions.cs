@@ -15,6 +15,7 @@ namespace Ecom.ApiGateway.Common.Auth
             // Nạp file cấu hình Reverse Proxy và Identity
 
             configuration.AddYamlFile("proxy-config-customer.yaml", optional: false, reloadOnChange: true);
+            configuration.AddYamlFile("proxy-config-product-service.yaml", optional: false, reloadOnChange: true);
             return services;
         }
 
@@ -51,11 +52,14 @@ namespace Ecom.ApiGateway.Common.Auth
                             transformContext.ProxyRequest.Headers.Add("X-User-Phone", phoneNumber);
                         }                      
                     }
+                    var loggerFactory = transformContext.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
+                    var logger = loggerFactory.CreateLogger("GatewayAuthTransform");
                     // --- PHẦN 2: XIN TOKEN MỚI (SERVICE-TO-SERVICE) ---
                     // Gateway dùng danh nghĩa "hệ thống" để gọi các service phía sau
+                    // có nữa api không cần đăng nhập để gọi api
                     var tokenService = transformContext.HttpContext.RequestServices.GetRequiredService<ITokenClientService>();
-                    var systemToken = await tokenService.GetSystemTokenAsync();
-
+                    var systemToken = await tokenService.GetSystemTokenAsync(); // token hệ thống gọi nội bộ
+                    logger.LogInformation("New System Token (Service-to-Service): Bearer {Token}", systemToken);
                     // Ghi đè hoặc thêm Token hệ thống vào Header Authorization
                     transformContext.ProxyRequest.Headers.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", systemToken);
