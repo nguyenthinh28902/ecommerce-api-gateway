@@ -1,7 +1,7 @@
 ReverseProxy:
   Routes:
     product_service_api_route:
-      ClusterId: "product_service_cluster"
+      ClusterId: "product_service_cluster"    
       Match:
         Path: "/api/nganh-hang/{**catch-all}"
       Metadata:
@@ -10,4 +10,4 @@ ReverseProxy:
     product_service_cluster: # Phải khớp với ClusterId ở trên
       Destinations:
         product_service_node:
-          Address: "https://localhost:7121" # Kiểm tra lại Port thực tế của Product Service
+          Address: "https://localhost:7121" # Kiểm tra lại Port thực tế của Product Service          Address: "https://localhost:7121" # Kiểm tra lại Port thực tế của Product Service

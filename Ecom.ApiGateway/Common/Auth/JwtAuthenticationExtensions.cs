@@ -43,6 +43,12 @@ namespace Ecom.ApiGateway.Common.Auth
             {
                 options.AddPolicy("CustomerService", policy =>
                     policy.RequireClaim("scope", "customer.read", "customer.write", "customer.internal"));
+                options.AddPolicy("OrderService", policy =>
+                    policy.RequireClaim("scope", "oder.read.web", "order.write.web", "order.internal.web"));
+                options.AddPolicy("ProductService", policy =>
+                    policy.RequireClaim("scope", "product.read.web", "product.write.web", "product.internal.web"));
+                options.AddPolicy("PaymentService", policy =>
+                    policy.RequireClaim("scope", "payment.read.web", "payment.write.web", "payment.internal.web"));
             });
 
             return services;

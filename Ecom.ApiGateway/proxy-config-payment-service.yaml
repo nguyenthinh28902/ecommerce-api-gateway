@@ -1,0 +1,14 @@
+ReverseProxy:
+  Routes:
+    payment_service_api_route:
+      ClusterId: "payment_service_cluster"
+      AuthorizationPolicy: PaymentService
+      Match:
+        Path: "/api/thanh-toan/{**catch-all}"
+      Metadata:
+        serviceName: "PaymentCMSService"
+  Clusters:
+    payment_service_cluster: # Phải khớp với ClusterId ở trên
+      Destinations:
+        payment_service_node:
+          Address: "https://localhost:7112" # Kiểm tra lại Port thực tế của payment Service
