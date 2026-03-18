@@ -67,8 +67,9 @@ namespace Ecom.ApiGateway.Service.Services
                 if (tokenResult != null && !string.IsNullOrEmpty(tokenResult.AccessToken))
                 {
                     // 3. Lưu vào Cache (Trừ 30 giây trừ hao thời gian mạng)
-                    var cacheOptions = new DistributedCacheEntryOptions {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(tokenResult.ExpiresIn - 30)
+                    var cacheOptions = new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(4)
                     };
 
                     try
