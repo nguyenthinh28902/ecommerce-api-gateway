@@ -10,6 +10,7 @@ namespace Ecom.ApiGateway.Service.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IDistributedCache _cache;
+        private readonly RedisConnection _redisConnection;
         private readonly InternalAuth _options;
         private readonly ILogger<TokenClientService> _logger;
         private const string CacheKey = "gatewayWeb_internal_token";
@@ -18,25 +19,30 @@ namespace Ecom.ApiGateway.Service.Services
             IHttpClientFactory httpClientFactory,
             IDistributedCache cache,
             IOptions<InternalAuth> options,
-            ILogger<TokenClientService> logger)
+            ILogger<TokenClientService> logger,
+            IOptions<RedisConnection> option)
         {
             _httpClientFactory = httpClientFactory;
             _cache = cache;
             _options = options.Value;
             _logger = logger;
+            _redisConnection = option.Value;
         }
 
         public async Task<string> GetSystemTokenAsync()
         {
             // 1. Kiểm tra Token trong Redis
-            try
+            if(_redisConnection.Enabled)
             {
-                var cachedToken = await _cache.GetStringAsync(CacheKey);
-                if (!string.IsNullOrEmpty(cachedToken)) return cachedToken;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi truy xuất token từ cache");
+                try
+                {
+                    var cachedToken = await _cache.GetStringAsync(CacheKey);
+                    if (!string.IsNullOrEmpty(cachedToken)) return cachedToken;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi truy xuất token từ cache");
+                }
             }
 
             // 2. Chuẩn bị request xin token mới
@@ -72,14 +78,17 @@ namespace Ecom.ApiGateway.Service.Services
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(4)
                     };
 
-                    try
+                    if (_redisConnection.Enabled)
                     {
-                        await _cache.SetStringAsync(CacheKey, tokenResult.AccessToken, cacheOptions);
-                    }
-                    catch (Exception ex)
-                    {
+                        try
+                        {
+                            await _cache.SetStringAsync(CacheKey, tokenResult.AccessToken, cacheOptions);
+                        }
+                        catch (Exception ex)
+                        {
 
-                        _logger.LogError(ex, "Lỗi khi set token vào cache");
+                            _logger.LogError(ex, "Lỗi khi set token vào cache");
+                        }
                     }
                     return tokenResult.AccessToken;
                 }
