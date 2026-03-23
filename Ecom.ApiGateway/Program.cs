@@ -1,5 +1,6 @@
 ﻿using Ecom.ApiGateway.Common.Auth;
 using Ecom.ApiGateway.Common.Helpers;
+using Ecom.ApiGateway.Middleware;
 using Ecom.ApiGateway.Models.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,8 @@ builder.Services.AddCustomAppSettings(builder.Configuration);
 
 //redis 
 builder.Services.AddStackExchangeRedis(builder.Configuration);
+//AddRedisRateLimiter
+builder.Services.AddRedisRateLimiterExtention();
 // 1. Cài đặt Authentication (Dùng hàm bạn đã viết)
 builder.Services.AddGatewayAuthentication(builder.Configuration);
 
@@ -35,7 +38,8 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<GuestIdentifierMiddleware>(); //thêm định danh cho máy khách.
+app.UseRateLimiter();
 app.MapReverseProxy();
 
 app.MapControllers();

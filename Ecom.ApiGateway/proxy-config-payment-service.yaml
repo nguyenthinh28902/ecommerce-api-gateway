@@ -2,6 +2,7 @@ ReverseProxy:
   Routes:
     payment_service_api_route:
       ClusterId: "payment_service_cluster"
+      RateLimiterPolicy: "ratelimit-order-policy"
       AuthorizationPolicy: PaymentService
       Match:
         Path: "/api/thanh-toan/{**catch-all}"

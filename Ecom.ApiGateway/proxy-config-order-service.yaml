@@ -3,15 +3,17 @@ ReverseProxy:
     # Route cho Giỏ hàng
     order_service_api_route:
       ClusterId: "order_service_cluster"
+      RateLimiterPolicy: "ratelimit-cart-policy"
       AuthorizationPolicy: OrderService
       Match:
         Path: "/api/gio-hang/{**catch-all}"
       Metadata:
         serviceName: "OrderService"
 
-    # Chỉ comment dòng quan trọng: Route mới cho các API liên quan đến Đơn hàng (Checkout, PlaceOrder...)
+    #  Route mới cho các API liên quan đến Đơn hàng (Checkout, PlaceOrder...)
     order_management_api_route:
       ClusterId: "order_service_cluster"
+      RateLimiterPolicy: "ratelimit-order-policy"
       AuthorizationPolicy: OrderService
       Match:
         Path: "/api/don-hang/{**catch-all}"
@@ -22,5 +24,5 @@ ReverseProxy:
     order_service_cluster:
       Destinations:
         order_service_node:
-          # Chỉ comment dòng quan trọng: Địa chỉ thực tế của Order Service API
+          #  Địa chỉ thực tế của Order Service API
           Address: "https://127.0.0.1:7051"
