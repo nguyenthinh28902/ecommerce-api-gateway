@@ -1,6 +1,8 @@
 ﻿using Ecom.ApiGateway.Models.Settings;
 using Ecom.ApiGateway.Service.Interfaces;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using Yarp.ReverseProxy.Transforms;
 namespace Ecom.ApiGateway.Common.Auth
@@ -30,6 +32,8 @@ namespace Ecom.ApiGateway.Common.Auth
             {
                 builderContext.AddRequestTransform(async transformContext =>
                 {
+                    transformContext.HttpContext.Items["ProxyStartTime"] = Stopwatch.GetTimestamp();
+
                     var loggerFactory = transformContext.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
                     var logger = loggerFactory.CreateLogger("GatewayAuthTransform");
                     // 1. Lấy sub (User ID) từ Token ban đầu
@@ -59,18 +63,33 @@ namespace Ecom.ApiGateway.Common.Auth
                         {
                             logger.LogInformation("New System Token (Service-to-Service): Bearer {Token}", phoneNumber);
                             transformContext.ProxyRequest.Headers.Add("X-User-Phone", phoneNumber);
-                        }                      
+                        }
+                        // --- PHẦN 2: XIN TOKEN MỚI (SERVICE-TO-SERVICE) ---
+                        // Gateway dùng danh nghĩa "hệ thống" để gọi các service phía sau
+                        // có nữa api không cần đăng nhập để gọi api
+                        var tokenService = transformContext.HttpContext.RequestServices.GetRequiredService<ITokenClientService>();
+                        var systemToken = await tokenService.GetSystemTokenAsync(); // token hệ thống gọi nội bộ
+                        logger.LogInformation("New System Token (Service-to-Service): Bearer {Token}", systemToken);
+                        // Ghi đè hoặc thêm Token hệ thống vào Header Authorization
+                        transformContext.ProxyRequest.Headers.Authorization =
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", systemToken);
                     }
                    
-                    // --- PHẦN 2: XIN TOKEN MỚI (SERVICE-TO-SERVICE) ---
-                    // Gateway dùng danh nghĩa "hệ thống" để gọi các service phía sau
-                    // có nữa api không cần đăng nhập để gọi api
-                    var tokenService = transformContext.HttpContext.RequestServices.GetRequiredService<ITokenClientService>();
-                    var systemToken = await tokenService.GetSystemTokenAsync(); // token hệ thống gọi nội bộ
-                    logger.LogInformation("New System Token (Service-to-Service): Bearer {Token}", systemToken);
-                    // Ghi đè hoặc thêm Token hệ thống vào Header Authorization
-                    transformContext.ProxyRequest.Headers.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", systemToken);
+                    
+                   
+                });
+                builderContext.AddResponseTransform(async r =>
+                {
+                    if (r.HttpContext.Items.TryGetValue("ProxyStartTime", out var startTimeObj))
+                    {
+                        var startTime = (long)startTimeObj;
+                        var elapsed = Stopwatch.GetElapsedTime(startTime).TotalMilliseconds;
+
+                        // In ra log hoặc thêm vào Header để debug
+                        Console.WriteLine($"[YARP Progress] Path: {r.HttpContext.Request.Path} | Time: {elapsed:N2}ms");
+                        r.HttpContext.Response.Headers["X-Proxy-Elapsed-Ms"] = elapsed.ToString("N2");
+                    }
+                    await Task.CompletedTask;
                 });
             });
             return services;

@@ -10,4 +10,4 @@ ReverseProxy:
     product_service_cluster: # Phải khớp với ClusterId ở trên
       Destinations:
         product_service_node:
-          Address: "https://localhost:7121" # Kiểm tra lại Port thực tế của Product Service          Address: "https://localhost:7121" # Kiểm tra lại Port thực tế của Product Service
+          Address: "https://127.0.0.1:7121" # Kiểm tra lại Port thực tế của Product Service          Address: "https://localhost:7121" # Kiểm tra lại Port thực tế của Product Service

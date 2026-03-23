@@ -11,4 +11,4 @@ ReverseProxy:
     payment_service_cluster: # Phải khớp với ClusterId ở trên
       Destinations:
         payment_service_node:
-          Address: "https://localhost:7112" # Kiểm tra lại Port thực tế của payment Service
+          Address: "https://127.0.0.1:7112" # Kiểm tra lại Port thực tế của payment Service

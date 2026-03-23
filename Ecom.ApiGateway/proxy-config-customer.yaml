@@ -11,4 +11,4 @@
     customer-cluster:
       Destinations:
         destination1:
-          Address: "https://localhost:7266" # Link service khách hàng của bạn
+          Address: "https://127.0.0.1:7266" # Link service khách hàng của bạn

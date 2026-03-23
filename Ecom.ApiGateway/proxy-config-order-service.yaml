@@ -23,4 +23,4 @@ ReverseProxy:
       Destinations:
         order_service_node:
           # Chỉ comment dòng quan trọng: Địa chỉ thực tế của Order Service API
-          Address: "https://localhost:7051"
+          Address: "https://127.0.0.1:7051"
