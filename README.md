@@ -19,4 +19,8 @@
     * Cấu hình xác thực JWT Bearer tại từng Microservice.
     * Phân quyền mức độ chi tiết dựa trên Scopes và Claims (Policy-based Authorization).
     * [Xem cấu hình tại Product Service](https://github.com/nguyenthinh28902/Ecom.ProductService)
+* **Identity CMS Core & Authorization Logic:**
+    * Định nghĩa cấu trúc các thực thể cốt lõi bao gồm `ApplicationUser`, `ApplicationDepartment` và `DepartmentPermission`.
+    * Triển khai logic ánh xạ và chuyển đổi quyền hạn từ cơ sở dữ liệu sang định dạng Scopes.
+    * [Xem cấu hình tại Identity CMS Core](https://github.com/nguyenthinh28902/ecommerce-identity-cms/blob/main/README.md)
 ---
