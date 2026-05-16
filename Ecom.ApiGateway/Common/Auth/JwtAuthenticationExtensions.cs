@@ -25,7 +25,6 @@ namespace Ecom.ApiGateway.Common.Auth
                     // IdentityServer URL
                     options.Authority = internalAuth.Issuer;
                     options.RequireHttpsMetadata = false; // Dev mode
-
                     // BẮT BUỘC: Lưu token để dùng trong AddTransforms (Token Relay)
                     options.SaveToken = true;
 
@@ -35,6 +34,35 @@ namespace Ecom.ApiGateway.Common.Auth
                         ValidateAudience = false, // gateway không kiểm tra audience
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.FromSeconds(20),// Khớp thời gian chính xác giữa Gateway và IdentityServer
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            // Log khi Validation thất bại (Sai Issuer, Hết hạn, Sai Key...)
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                            logger.LogError($"Xác thực thất bại: {context.Exception.Message}");
+
+                            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                            {
+                                logger.LogWarning("Token đã hết hạn.");
+                            }
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context =>
+                        {
+                            // Log khi thành công (Để biết là ít nhất nó đã chạy vào đây)
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                            logger.LogInformation("Xác thực Token thành công!");
+                            return Task.CompletedTask;
+                        },
+                        OnChallenge = context =>
+                        {
+                            // Log khi Middleware từ chối truy cập (Thiếu Token hoặc Token không hợp lệ)
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                            logger.LogWarning($"Phản hồi 401: {context.Error}, {context.ErrorDescription}");
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 

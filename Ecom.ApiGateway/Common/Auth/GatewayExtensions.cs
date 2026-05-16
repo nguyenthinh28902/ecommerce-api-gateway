@@ -30,8 +30,11 @@ namespace Ecom.ApiGateway.Common.Auth
             .LoadFromConfig(configuration.GetSection("ReverseProxy"))
             .AddTransforms(builderContext =>
             {
+                builderContext.AddRequestHeader("X-Correlation-ID", "{CorrelationId}");
+
                 builderContext.AddRequestTransform(async transformContext =>
                 {
+                   
                     transformContext.HttpContext.Items["ProxyStartTime"] = Stopwatch.GetTimestamp();
 
                     var loggerFactory = transformContext.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
